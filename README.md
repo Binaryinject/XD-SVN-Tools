@@ -13,9 +13,11 @@
 
 ## 下载与安装
 
-1. 打开 [GitHub Actions](https://github.com/Binaryinject/XD-SVN-Tools/actions/workflows/build-windows.yml)，选择一次成功的构建。
-2. 在构建页面底部的 **Artifacts** 下载 `XD-SVN-Tools-<版本>-windows-x64`，解压下载的归档。
-3. 运行 `XD-SVN-Tools-Setup-<版本>.exe`，点击“安装并接入 TortoiseSVN”。下载 Actions 产物需要登录 GitHub。
+**[下载安装包](https://github.com/Binaryinject/XD-SVN-Tools/releases/latest/download/XD-SVN-Tools-Setup.exe)** · [下载便携版](https://github.com/Binaryinject/XD-SVN-Tools/releases/latest/download/XD-SVN-Tools-win-x64.zip) · [SHA-256 校验文件](https://github.com/Binaryinject/XD-SVN-Tools/releases/latest/download/SHA256SUMS.txt) · [全部版本](https://github.com/Binaryinject/XD-SVN-Tools/releases)
+
+运行 `XD-SVN-Tools-Setup.exe`，点击“安装并接入 TortoiseSVN”。上述固定链接始终指向最新正式版；预发布版请从“全部版本”选择。
+
+开发构建仍可在 [GitHub Actions](https://github.com/Binaryinject/XD-SVN-Tools/actions/workflows/build-windows.yml) 成功运行页面底部的 **Artifacts** 下载，下载 Actions 产物需要登录 GitHub。
 
 安装器会将程序安装到 `%LOCALAPPDATA%\Programs\XD-SVN-Tools`，为当前用户自动注册 `.xd` 的对比和合并工具。无需管理员权限、Python、Node.js 或 Git。要从 SVN 中调用，请先安装 TortoiseSVN。
 
@@ -25,9 +27,11 @@
 
 | 文件 | 用途 |
 | --- | --- |
-| `XD-SVN-Tools-Setup-<版本>.exe` | 安装、升级并自动接入 TortoiseSVN |
-| `XD-SVN-Tools-<版本>-win-x64.zip` | 便携版，完整解压后运行 `XD-SVN-Tools.exe` |
-| `SHA256SUMS-<版本>.txt` | 安装器和便携包的 SHA-256 校验值 |
+| `XD-SVN-Tools-Setup.exe` | Release 安装器，安装、升级并自动接入 TortoiseSVN |
+| `XD-SVN-Tools-win-x64.zip` | Release 便携版，完整解压后运行 `XD-SVN-Tools.exe` |
+| `SHA256SUMS.txt` | 对应 Release 文件名的 SHA-256 校验值 |
+
+Actions 和本地构建的文件名额外包含版本号，例如 `XD-SVN-Tools-Setup-0.1.3.exe`。
 
 当前构建面向 Windows x64，已在 Windows 11 验证。安装器需要 .NET Framework 4.8。生成的安装器目前未做代码签名。
 
@@ -120,7 +124,19 @@ python -m unittest discover -v
 - 推送 `v*` 标签，标签必须与 `VERSION` 一致，例如 `v0.1.3`。
 - 在 Actions 页面选择 **Run workflow** 手动触发。
 
-工作流自动运行测试、构建 EXE 与安装器，并对打包后的程序执行无界面检查。产物上传到构建页面的 Artifacts，保留 30 天；不会自动创建 GitHub Release，也不会向 PyPI 发布。工作流只需要仓库读取权限，无需配置额外密钥。
+工作流自动运行测试、构建 EXE 与安装器，并对打包后的程序执行无界面检查。产物上传到构建页面的 Artifacts，保留 30 天。
+
+推送版本标签时，构建成功后会自动创建 GitHub Release，上传安装器、便携 ZIP 和校验文件；所有附件上传完成后才发布。含 `-` 的版本号发布为预发布版，不影响最新正式版下载链接。已成功发布的版本重跑时会检查附件并保留现有文件。
+
+发布新版本：
+
+```powershell
+# 先更新 VERSION，提交并推送；标签必须与 VERSION 一致
+git tag v0.1.3
+git push origin v0.1.3
+```
+
+构建任务只有仓库读取权限；仅标签推送触发的独立发布任务有 `contents: write` 权限，并使用内置 `GITHUB_TOKEN`。PR 和普通分支构建不会发布，无需额外密钥，也不会向 PyPI 发布。
 
 ## 合并规则与限制
 

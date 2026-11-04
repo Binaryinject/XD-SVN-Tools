@@ -20,5 +20,9 @@ current user's LocalAppData and backs up the affected TortoiseSVN settings.
 Uninstallation and upgrade checks should be performed in a disposable Windows
 account or VM when changing installer behavior.
 
-Action versions are pinned to commit SHAs. The workflow uses no signing or
-publishing secrets, so pull-request builds cannot publish releases.
+Action versions are pinned to commit SHAs. Builds have read-only repository
+permission. On a matching version-tag push, a separate job downloads the tested
+artifacts and publishes a release with the built-in GITHUB_TOKEN and contents:
+write permission. It uses fixed asset names for permanent latest-download URLs,
+regenerates matching checksums, uploads to a draft, then publishes it. Published
+assets are not replaced on reruns. Pull-request builds cannot publish releases.

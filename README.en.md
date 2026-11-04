@@ -13,9 +13,11 @@ Inspect changes by node ID, compare colored lines, merge independent edits autom
 
 ## Download and install
 
-1. Open [GitHub Actions](https://github.com/Binaryinject/XD-SVN-Tools/actions/workflows/build-windows.yml) and select a successful run.
-2. Download `XD-SVN-Tools-<version>-windows-x64` from **Artifacts** and extract the downloaded archive. GitHub sign-in is required to download workflow artifacts.
-3. Run `XD-SVN-Tools-Setup-<version>.exe` and click the install and integrate button.
+**[Download installer](https://github.com/Binaryinject/XD-SVN-Tools/releases/latest/download/XD-SVN-Tools-Setup.exe)** · [Download portable ZIP](https://github.com/Binaryinject/XD-SVN-Tools/releases/latest/download/XD-SVN-Tools-win-x64.zip) · [SHA-256 checksums](https://github.com/Binaryinject/XD-SVN-Tools/releases/latest/download/SHA256SUMS.txt) · [All releases](https://github.com/Binaryinject/XD-SVN-Tools/releases)
+
+Run `XD-SVN-Tools-Setup.exe` and click the install and integrate button. These stable links point to the latest full release; select prereleases from the All releases page.
+
+Development builds remain available in **Artifacts** on successful [GitHub Actions](https://github.com/Binaryinject/XD-SVN-Tools/actions/workflows/build-windows.yml) runs. Downloading workflow artifacts requires GitHub sign-in.
 
 The installer uses `%LOCALAPPDATA%\Programs\XD-SVN-Tools` and registers `.xd` diff and merge commands for the current user. Administrator rights, Python, Node.js, and Git are not required by the installed app. Install TortoiseSVN first to invoke the tool from SVN.
 
@@ -25,9 +27,11 @@ Each build provides:
 
 | File | Purpose |
 | --- | --- |
-| `XD-SVN-Tools-Setup-<version>.exe` | Install or upgrade and register TortoiseSVN commands |
-| `XD-SVN-Tools-<version>-win-x64.zip` | Portable app; extract everything and run `XD-SVN-Tools.exe` |
-| `SHA256SUMS-<version>.txt` | SHA-256 hashes for the installer and portable ZIP |
+| `XD-SVN-Tools-Setup.exe` | Release installer; install or upgrade and register TortoiseSVN commands |
+| `XD-SVN-Tools-win-x64.zip` | Release portable app; extract everything and run `XD-SVN-Tools.exe` |
+| `SHA256SUMS.txt` | SHA-256 hashes using the corresponding release asset names |
+
+Local builds and Actions artifacts include the version in their filenames, such as `XD-SVN-Tools-Setup-0.1.3.exe`.
 
 Builds target Windows x64 and have been validated on Windows 11. The installer requires .NET Framework 4.8. Generated installers are currently unsigned. The application interface is in Chinese; this English README documents its operation.
 
@@ -120,7 +124,19 @@ The [`build-windows.yml`](.github/workflows/build-windows.yml) workflow runs on:
 - `v*` tags, which must match `VERSION`, for example `v0.1.3`.
 - Manual **Run workflow** requests on the Actions page.
 
-It runs tests, builds the app and installer, and checks the frozen command-line entry point. Downloads are uploaded to the run's Artifacts section and retained for 30 days. The workflow does not create GitHub Releases or publish to PyPI. It requires only repository read permission and no additional secrets.
+It runs tests, builds the app and installer, and checks the frozen command-line entry point. Downloads are uploaded to the run's Artifacts section and retained for 30 days.
+
+On a version-tag push, a successful build automatically creates a GitHub Release and uploads the installer, portable ZIP, and checksums. It publishes only after all assets have uploaded. Versions containing `-` become prereleases and do not replace the latest full release. Rerunning a published version verifies the asset names and leaves existing files unchanged.
+
+To publish a version:
+
+```powershell
+# Update VERSION first, commit, and push; the tag must match VERSION
+git tag v0.1.3
+git push origin v0.1.3
+```
+
+The build job has repository read permission. Only the separate release job on tag pushes receives `contents: write`, using the built-in `GITHUB_TOKEN`. Pull requests and ordinary branch builds cannot publish. No additional secrets are needed, and nothing is published to PyPI.
 
 ## Merge rules and limitations
 

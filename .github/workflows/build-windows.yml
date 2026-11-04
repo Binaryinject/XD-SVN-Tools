@@ -20,6 +20,8 @@ jobs:
     name: Test and package Windows x64
     runs-on: windows-2022
     timeout-minutes: 25
+    outputs:
+      version: ${{ steps.build.outputs.version }}
     defaults:
       run:
         shell: pwsh
@@ -52,3 +54,57 @@ jobs:
           if-no-files-found: error
           retention-days: 30
           compression-level: 0
+
+  release:
+    name: Publish GitHub Release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download tested Windows packages
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: XD-SVN-Tools-${{ needs.build.outputs.version }}-windows-x64
+          path: artifacts
+
+      - name: Publish installer, portable ZIP, and checksums
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          test "$RELEASE_TAG" = "v$VERSION"
+          mkdir -p release
+          cp "artifacts/XD-SVN-Tools-Setup-$VERSION.exe" release/XD-SVN-Tools-Setup.exe
+          cp "artifacts/XD-SVN-Tools-$VERSION-win-x64.zip" release/XD-SVN-Tools-win-x64.zip
+          (cd release && sha256sum XD-SVN-Tools-Setup.exe XD-SVN-Tools-win-x64.zip > SHA256SUMS.txt)
+
+          # Keep published assets unchanged when a successful release is rerun.
+          draft=$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft' 2>/dev/null || true)
+          if [ "$draft" = "false" ]; then
+            names=$(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name')
+            for asset in XD-SVN-Tools-Setup.exe XD-SVN-Tools-win-x64.zip SHA256SUMS.txt; do
+              printf '%s\n' "$names" | grep -Fxq "$asset"
+            done
+            echo "Release already published with all expected assets; leaving it unchanged."
+            exit 0
+          fi
+
+          if [ -z "$draft" ]; then
+            args=(--verify-tag --draft --generate-notes --title "XD SVN Tools $RELEASE_TAG")
+            if [[ "$VERSION" == *-* ]]; then args+=(--prerelease); fi
+            gh release create "$RELEASE_TAG" "${args[@]}"
+          fi
+          gh release upload "$RELEASE_TAG" release/XD-SVN-Tools-Setup.exe release/XD-SVN-Tools-win-x64.zip release/SHA256SUMS.txt --clobber
+          if [[ "$VERSION" == *-* ]]; then
+            gh release edit "$RELEASE_TAG" --draft=false --prerelease --latest=false
+          else
+            gh release edit "$RELEASE_TAG" --draft=false --latest
+          fi
+          echo "### Release: https://github.com/$GH_REPO/releases/tag/$RELEASE_TAG" >> "$GITHUB_STEP_SUMMARY"
