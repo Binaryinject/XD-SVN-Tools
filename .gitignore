@@ -218,3 +218,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local build environments and Windows release artifacts
+.build-env/
+.build/
+artifacts/
+*.exe
+*.zip

@@ -1,0 +1,20 @@
+XD SVN Tools
+
+This is an independent tool, not an Adobe or TortoiseSVN product.
+The archive extraction and merging approach was informed by these MIT projects:
+
+https://github.com/dilitirio/xd-scenegraph-toolkit
+Copyright (c) 2025 dilitirio
+See licenses/xd-scenegraph-toolkit-MIT.txt.
+
+https://github.com/theseion/git-xd-merge
+Copyright (c) 2019 Max Leske
+See licenses/git-xd-merge-MIT.txt.
+
+The Windows GUI, conservative merge engine, installer, and build pipeline are
+implemented independently. No Git or Node.js runtime is needed by end users.
+
+Binary distributions bundle CPython and Tcl/Tk via PyInstaller. Runtime licenses
+are distributed in licenses/runtime, with the PyInstaller license and bootloader
+exception collected from the build environment. The repository LICENSE covers
+the application source. See https://pyinstaller.org/en/stable/license.html.
